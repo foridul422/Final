@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Tunnel Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <main id="loginView" class="login-wrap">
+    <form id="loginForm" class="card login-card">
+      <h1>Admin Login</h1>
+      <label>Email<input id="loginEmail" type="email" autocomplete="username" required></label>
+      <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+      <button id="loginBtn" class="btn primary" type="submit">Login</button>
+    </form>
+  </main>
+
+  <div id="appView" class="hidden">
+    <aside class="sidebar">
+      <h2>NOVA Admin</h2>
+      <p id="userEmail" class="muted">-</p>
+      <button class="tab" data-screen="servers">Add Server</button>
+      <button class="tab" data-screen="profiles">Profiles</button>
+      <button class="tab" data-screen="settings">Settings</button>
+      <button id="logoutBtn" class="btn ghost">Logout</button>
+    </aside>
+
+    <main class="content">
+      <header class="top">
+        <h3 id="title">Home</h3>
+        <button id="refreshBtn" class="btn secondary">Refresh</button>
+      </header>
+
+      <section id="home" class="screen show home-screen">
+        <div class="home-actions">
+          <button class="home-card" type="button" data-home-target="profiles" data-home-mode="addProfile">
+            <span>Add Profile</span>
+          </button>
+          <button class="home-card" type="button" data-home-target="servers" data-home-mode="addServer">
+            <span>Add Server</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="dashboard" class="screen">
+        <div class="grid3">
+          <article class="card"><small>Config Version</small><strong id="dashVersion">0</strong></article>
+          <article class="card"><small>Total Servers</small><strong id="dashServers">0</strong></article>
+          <article class="card"><small>Total Profiles</small><strong id="dashProfiles">0</strong></article>
+        </div>
+        <article class="card">
+          <small>Notice</small>
+          <p id="dashNotice">-</p>
+        </article>
+      </section>
+
+      <section id="servers" class="screen">
+        <div class="split">
+          <form id="serverForm" class="card form">
+            <h4 id="serverFormTitle">Add Server</h4>
+            <input id="serverDocId" type="hidden">
+            <label>Document ID (optional)<input id="serverCustomId"></label>
+            <label>Server Name*<input id="serverName" required></label>
+            <label>Flag*
+              <select id="serverFlag" required>
+                <option value="">Select country flag</option>
+              </select>
+            </label>
+            <label>Server Add Type*
+              <select id="serverKind" required>
+                <option value="ssh">SSH Server</option>
+                <option value="v2ray">V2Ray Server</option>
+                <option value="other">Other / Legacy</option>
+              </select>
+            </label>
+            <label>Status*
+              <select id="serverStatus"><option>active</option><option>inactive</option></select>
+            </label>
+            <label>Premium
+              <select id="serverPremium"><option value="false">Free</option><option value="true">Premium</option></select>
+            </label>
+            <label>Sort Order*<input id="serverSortOrder" type="number" value="0" required></label>
+            <label>Linked Profiles
+              <select id="serverProfile" multiple size="4"></select>
+              <small class="muted">Select one or more profiles for this server.</small>
+            </label>
+
+            <section id="sshChooser" class="server-section span-2">
+              <div class="section-head">
+                <strong>SSH Server</strong>
+                <small>Select the SSH connection type first.</small>
+              </div>
+              <div class="section-grid">
+                <label>SSH Option*
+                  <select id="serverSshMode">
+                    <option value="ssh_ssl">SSH - SSL</option>
+                    <option value="ssh_payload">SSH - Payload</option>
+                    <option value="ssh_proxy_payload">SSH Proxy - Payload</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <section id="v2rayChooser" class="server-section span-2 hidden">
+              <div class="section-head">
+                <strong>V2Ray Server</strong>
+                <small>Use custom fields or import a share link.</small>
+              </div>
+              <div class="section-grid">
+                <label>V2Ray Option*
+                  <select id="serverV2rayMode">
+                    <option value="custom">Custom V2Ray</option>
+                    <option value="import">Import V2Ray Server</option>
+                  </select>
+                </label>
+                <label id="v2rayCustomBox">Custom Type*
+                  <select id="serverV2rayProtocol">
+                    <option value="vless">VLESS</option>
+                    <option value="vmess">VMess</option>
+                    <option value="trojan">Trojan</option>
+                  </select>
+                </label>
+                <label id="v2rayImportBox" class="span-2 hidden">
+                  <span>Import Config</span>
+                  <textarea id="serverImportLink" rows="4" placeholder="vless://... or vmess://... or trojan://..."></textarea>
+                </label>
+                <div id="v2rayImportActions" class="row span-2 hidden">
+                  <button id="importV2rayBtn" class="btn secondary" type="button">Import Link</button>
+                  <small class="muted">Import fills the server fields before save.</small>
+                </div>
+              </div>
+            </section>
+
+            <section id="otherChooser" class="server-section span-2 hidden">
+              <div class="section-head">
+                <strong>Other / Legacy</strong>
+                <small>Keep older server types available.</small>
+              </div>
+              <div class="section-grid">
+                <label>Protocol*
+                  <select id="serverProtocol">
+                    <option>OVPN</option>
+                    <option>OpenVPN</option>
+                    <option>Shadowsocks</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <section id="connectionFields" class="server-section span-2">
+              <div class="section-head">
+                <strong>Connection Details</strong>
+                <small id="connectionHint">Fill the fields needed for the selected server type.</small>
+              </div>
+              <div class="section-grid">
+                <label id="serverHostWrap">Host<input id="serverHost"></label>
+                <label id="serverPortWrap">Port<input id="serverPort" type="number" inputmode="numeric" min="1" max="65535"></label>
+                <label id="serverUsernameWrap">Username<input id="serverUsername" autocomplete="off"></label>
+                <label id="serverPasswordWrap">Password<input id="serverPassword" autocomplete="off"></label>
+                <label id="serverSniWrap">SNI<input id="serverSni"></label>
+                <label id="serverProxyHostWrap" class="hidden">Proxy Host<input id="serverProxyHost"></label>
+                <label id="serverProxyPortWrap" class="hidden">Proxy Port<input id="serverProxyPort" type="number" inputmode="numeric" min="1" max="65535"></label>
+                <label id="serverUuidWrap">UUID / ID<input id="serverUuid"></label>
+                <label id="serverTrojanPasswordWrap">Trojan Password<input id="serverTrojanPassword" autocomplete="off"></label>
+                <label id="serverAlterIdWrap">Alter ID<input id="serverAlterId" type="number" inputmode="numeric" value="0"></label>
+                <label id="serverSecurityWrap">Security<input id="serverSecurity"></label>
+                <label id="serverNetworkTypeWrap">Network Type<input id="serverNetworkType" placeholder="tcp/ws/grpc/httpupgrade"></label>
+                <label id="serverPathWrap">Path<input id="serverPath" placeholder="/ws"></label>
+                <label id="serverHostHeaderWrap">Host Header<input id="serverHostHeader"></label>
+                <label id="serverTlsWrap">TLS
+                  <select id="serverTls"><option value="false">Off</option><option value="true">On</option></select>
+                </label>
+                <label id="serverAllowInsecureWrap">Allow Insecure
+                  <select id="serverAllowInsecure"><option value="false">Off</option><option value="true">On</option></select>
+                </label>
+                <label id="serverFlowWrap">Flow<input id="serverFlow"></label>
+                <label id="serverPublicKeyWrap">Public Key<input id="serverPublicKey"></label>
+                <label id="serverShortIdWrap">Short ID<input id="serverShortId"></label>
+                <label id="serverSpiderXWrap">SpiderX<input id="serverSpiderX"></label>
+                <label id="serverSsMethodWrap">SS Method<input id="serverSsMethod"></label>
+                <label id="serverOvpnConfigWrap" class="span-2">OVPN Config<textarea id="serverOvpnConfig" rows="3"></textarea></label>
+                <label id="serverPayloadWrap" class="span-2">
+                  <span id="serverPayloadLabel">Payload / Share Link</span>
+                  <textarea id="serverPayload" rows="3" placeholder="Payload or share link"></textarea>
+                </label>
+              </div>
+            </section>
+            <div class="row">
+              <button id="saveServerBtn" class="btn primary" type="submit">Save Server</button>
+              <button id="resetServerBtn" class="btn ghost" type="button">Clear</button>
+            </div>
+          </form>
+
+          <article class="card">
+            <div class="row">
+              <h4>Server List</h4>
+              <input id="serverSearch" placeholder="Search...">
+            </div>
+            <div id="serverList" class="list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="profiles" class="screen">
+        <div class="profile-tools">
+          <button class="profile-tool active" type="button" data-profile-view="add">Add New Profile</button>
+          <button class="profile-tool" type="button" data-profile-view="list">Profile List</button>
+          <button class="profile-tool" type="button" data-profile-view="link">Link Server</button>
+        </div>
+
+        <div class="split profile-split">
+          <form id="profileForm" class="card form profile-panel show" data-profile-panel="add">
+            <h4 id="profileFormTitle">Add Profile</h4>
+            <input id="profileDocId" type="hidden">
+            <label>Document ID (optional)<input id="profileCustomId"></label>
+            <label>Profile Name*<input id="profileName" required></label>
+            <label>Icon
+              <select id="profileIcon"></select>
+            </label>
+            <label>Status*
+              <select id="profileStatus"><option>active</option><option>inactive</option></select>
+            </label>
+            <label>Sort Order*<input id="profileSortOrder" type="number" value="0" required></label>
+            <div class="row">
+              <button id="saveProfileBtn" class="btn primary" type="submit">Save Profile</button>
+              <button id="resetProfileBtn" class="btn ghost" type="button">Clear</button>
+            </div>
+          </form>
+          <article id="profileListPanel" class="card profile-panel" data-profile-panel="list">
+            <div class="row">
+              <h4>Profile List</h4>
+              <input id="profileSearch" placeholder="Search...">
+            </div>
+            <div id="profileList" class="list"></div>
+          </article>
+          <article id="profileLinkPanel" class="card profile-panel link-panel" data-profile-panel="link">
+            <h4>Link Server</h4>
+            <small class="muted">Linking adds this server to the selected profile without removing other profile links.</small>
+            <label>Profile
+              <select id="linkProfileSelect"></select>
+            </label>
+            <label>Server
+              <select id="linkServerSelect"></select>
+            </label>
+            <div class="row">
+              <button id="linkServerBtn" class="btn primary" type="button">Link Server</button>
+              <button id="unlinkServerBtn" class="btn ghost" type="button">Unlink</button>
+            </div>
+            <div id="linkPreview" class="list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="settings" class="screen">
+        <form id="settingsForm" class="card form narrow">
+          <h4>App Config</h4>
+          <label>Notice<textarea id="settingsNotice" rows="3"></textarea></label>
+          <label>Force Update
+            <select id="settingsForceUpdate"><option value="false">Off</option><option value="true">On</option></select>
+          </label>
+          <label>Minimum App Version<input id="settingsMinVersion"></label>
+          <label>Config Version (read only)<input id="settingsConfigVersion" readonly></label>
+          <div class="row">
+            <button id="saveSettingsBtn" class="btn primary" type="submit">Save Settings</button>
+            <button id="increaseVersionBtn" class="btn secondary" type="button">Increase Version</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
